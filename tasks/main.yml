@@ -1,0 +1,101 @@
+---
+- name: 'Ensure SELinux policies'
+  community.general.sefcontext:
+    path: "{{ forgejo_runner_dir }}(/.*)?"
+    setype: 'container_file_t'
+    state: 'present'
+  loop:
+    - "{{ forgejo_runner_conf_dir }}"
+    - "{{ forgejo_runner_data_dir }}"
+  loop_control:
+    loop_var: 'forgejo_runner_dir'
+  when: ansible_facts['selinux']['mode'] == 'enforcing'
+
+- name: 'Ensure Runner directories'
+  ansible.builtin.file:
+    path: "{{ forgejo_runner_dir }}"
+    state: 'directory'
+    owner: 'root'
+    group: 'root'
+    mode: '0750'
+  loop:
+    - "{{ forgejo_runner_conf_dir }}"
+    - "{{ forgejo_runner_data_dir }}/data"
+  loop_control:
+    loop_var: 'forgejo_runner_dir'
+
+- name: 'Copy custom entrypoint script'
+  ansible.builtin.copy:
+    src: 'start_runner.sh'
+    dest: "{{ forgejo_runner_conf_dir }}/start_runner.sh"
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+
+- name: 'Copy CA certificates bundle'
+  ansible.builtin.copy:
+    src: "{{ forgejo_runner_ca_file }}"
+    dest: "{{ forgejo_runner_conf_dir }}/ca-certificates.crt"
+    remote_src: true
+    owner: 'root'
+    group: 'root'
+    mode: '0755'
+
+- name: 'Ensure Runner config file'
+  ansible.builtin.template:
+    src: 'config.yaml.j2'
+    dest: "{{ forgejo_runner_conf_dir }}/config.yaml"
+    owner: 'root'
+    group: 'root'
+    mode: '0644'
+  notify: 'Restart forgejo_runner'
+
+- name: 'Ensure Podman container'
+  containers.podman.podman_container:
+    name: 'forgejo_runner'
+    image: "{{ forgejo_runner_image }}"
+    state: 'quadlet'
+    auto_remove: true
+    command: '/bin/bash /entrypoint.sh'
+    device:
+      - '/dev/fuse'
+    user: '0:0'
+    privileged: true
+    volumes:
+      - "{{ forgejo_runner_data_dir }}/data:/data:z"
+      - "{{ forgejo_runner_conf_dir }}/config.yaml:/config.yaml:z"
+      - "{{ forgejo_runner_conf_dir }}/start_runner.sh:/entrypoint.sh:ro,z"
+      - "/run/podman/podman.sock:/var/run/docker.sock:z"
+      - "{{ forgejo_runner_conf_dir }}/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro,z"
+    quadlet_options:
+      - 'AutoUpdate=registry'
+      - |
+        [Install]
+        WantedBy=default.target
+    env:
+      FORGEJO_INSTANCE_URL: "{{ forgejo_runner_instance_url }}"
+      FORGEJO_RUNNER_REGISTRATION_TOKEN: "{{ forgejo_runner_registration_token }}"
+      FORGEJO_RUNNER_NAME: "{{ forgejo_runner_name }}"
+      http_proxy: "{{ forgejo_runner_proxy_url }}"
+      https_proxy: "{{ forgejo_runner_proxy_url }}"
+      no_proxy: "{{ forgejo_runner_no_proxy }}"
+  notify: 'Restart forgejo_runner'
+
+- name: 'Ensure services'
+  ansible.builtin.systemd:
+    name: "{{ forgejo_runner_service }}"
+    state: 'started'
+    enabled: true
+    daemon_reload: true
+  loop:
+    - 'podman.socket'
+    - 'forgejo_runner.service'
+  loop_control:
+    loop_var: 'forgejo_runner_service'
+
+- name: 'Ensure cleanup cronjob'
+  ansible.builtin.cron:
+    name: 'forgejo_runner - clean up old images'
+    user: 'root'
+    job: "podman system prune -af --filter \"until={{ forgejo_runner_prune_images_older_then }}h\""
+    special_time: 'daily'

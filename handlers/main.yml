@@ -1,0 +1,5 @@
+---
+- name: 'Restart forgejo_runner'
+  ansible.builtin.systemd:
+    name: 'forgejo_runner'
+    state: 'restarted'

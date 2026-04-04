@@ -1,0 +1,41 @@
+---
+### Instance settings
+# URL of the Forgejo instance to use
+forgejo_runner_instance_url: 'https://forgejo.example.com'
+# Whether or not to validate SSL certificates for the Gitea instance
+# NOTE: if using a selfsigned certificate, you probably want this
+forgejo_runner_verify_ssl: true
+
+# Registration token to add Runner to Gitea instance
+forgejo_runner_registration_token: 'my-forgejo-token'
+
+### Runner settings
+forgejo_runner_name: "{{ ansible_facts['fqdn'] }}"
+# How much jobs the runner can execute at the same time
+forgejo_runner_capacity: 1
+
+# Which image to run
+forgejo_runner_image: 'code.forgejo.org/forgejo/runner:12'
+# Whether or not to always pull the image before starting a job
+forgejo_runner_force_pull: true
+
+# CA certificate bundle
+# It's mapped to both /etc/ssl/certs/custom-ca.pem and /etc/pki/ca-trust/source/anchors/custom-ca.pem
+# in containers (so both EL and Debian-like are supported)
+#
+# However, EL-like containers _must_ run update-ca-trust before doing anything else
+forgejo_runner_ca_file: '/etc/ssl/certs/ca-certificates.crt'
+
+# Daily scheduled cleanup of downloaded images
+# Cleans up images older then X hours
+forgejo_runner_prune_images_older_then: '48'
+
+# Which labels the runner has
+# NOTE: Basically which images are available to execute jobs with
+# The one below has been used succesfully to test Ansible roles with Molecule
+forgejo_runner_labels:
+  - ubuntu-latest:docker://ghcr.io/catthehacker/ubuntu:act-latest
+
+# Proxy configuration
+forgejo_runner_proxy_url: ''
+forgejo_runner_no_proxy: ''
