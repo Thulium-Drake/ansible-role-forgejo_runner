@@ -39,3 +39,16 @@ forgejo_runner_labels:
 # Proxy configuration
 forgejo_runner_proxy_url: ''
 forgejo_runner_no_proxy: ''
+
+# Extra volumes for the runner container
+forgejo_runner_container_mounts: []
+# The following files will allow RHEL-based containers to use subscription-manager repositories
+#  - src: /etc/rhsm
+#    dest: /etc/rhsm
+#    options: ro,z
+#  - src: /etc/pki/entitlement
+#    dest: /etc/pki/entitlement
+#    options: ro,z
+#  - src: /etc/pki/consumer
+#    dest: /etc/pki/consumer
+#    options: ro,z

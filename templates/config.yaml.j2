@@ -23,11 +23,20 @@ container:
   network: ""
   privileged: true
   force_pull: {{ forgejo_runner_force_pull }}
-  options: "--device /dev/fuse -v /run/podman/podman.sock:/var/run/docker.sock:z -v {{ forgejo_runner_conf_dir }}/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro,z"  # Propagate podman socket from host to job container
+  options: >-
+    --device /dev/fuse
+    -v /run/podman/podman.sock:/var/run/docker.sock:z
+    -v {{ forgejo_runner_conf_dir }}/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro,z
+{% for mount in forgejo_runner_container_mounts %}
+    -v {{ mount.src }}:{{ mount.dest }}:{{ mount.options }}
+{% endfor %}
   workdir_parent:
   valid_volumes:
     - /run/podman/podman.sock
     - {{ forgejo_runner_conf_dir }}/ca-certificates.crt
+{% for mount in forgejo_runner_container_mounts %}
+    - {{ mount.src }}
+{% endfor %}
   docker_host: "-"
 
 envs:
