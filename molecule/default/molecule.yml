@@ -10,7 +10,7 @@ lint:
   yamllint -c molecule/default/yamllint.yml .
   ansible-lint molecule/default/converge.yml
 platforms:
-  - name: "garage-${MOLECULE_DISTRO:-ubi9}"
+  - name: "forgejo-runner-${MOLECULE_DISTRO:-ubi9}"
     image: "git.element-networks.nl/containers/${MOLECULE_DISTRO:-ubi9}-ansible:latest"
     command: '/lib/systemd/systemd'
     pre_build_image: true

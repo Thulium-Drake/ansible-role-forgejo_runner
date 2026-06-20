@@ -9,7 +9,7 @@
     - "{{ forgejo_runner_data_dir }}"
   loop_control:
     loop_var: 'forgejo_runner_dir'
-  when: ansible_facts['selinux']['mode'] == 'enforcing'
+  when: ansible_facts['selinux']['status'] == 'enabled'
 
 - name: 'Ensure Runner directories'
   ansible.builtin.file:
