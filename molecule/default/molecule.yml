@@ -2,14 +2,14 @@
 dependency:
   name: 'galaxy'
 driver:
-  name: ${DRIVER_NAME:-docker}
+  name: ${DRIVER_NAME:-podman}
 lint:
   set -e
   yamllint -c molecule/default/yamllint.yml .
   ansible-lint molecule/default/converge.yml
 platforms:
-  - name: "empty"
-    image: "geerlingguy/docker-${MOLECULE_DISTRO:-debian10}-ansible:latest"
+  - name: "garage-${MOLECULE_DISTRO:-ubi9}"
+    image: "git.element-networks.nl/containers/${MOLECULE_DISTRO:-ubi9}-ansible:latest"
     command: '/lib/systemd/systemd'
     pre_build_image: true
     volumes:
@@ -20,5 +20,9 @@ provisioner:
   config_options:
     defaults:
       roles_path: "$MOLECULE_PROJECT_DIRECTORY/.."
+  env:
+    ANSIBLE_VERBOSITY: 2
+  options:
+    diff: true
 verifier:
   name: 'ansible'
