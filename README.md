@@ -3,7 +3,7 @@ This role installs the Forgejo Runner on a system of your choosing, it requires 
 
 ## Requirements
 
-* Fully configured and functioning Podman installation on your server
+* Fully configured and functioning Podman installation on your server. This role will install podman, but not configure registries etc. Please use a different role for that, e.g. https://github.com/Thulium-Drake/ansible-role-podman)
 * Fully functional Forgejo instance (you need to get a registration token from it)
 
 In order to function properly and allow the CI container to start it's own job containers (etc.) this application needs to run with privileged containers.

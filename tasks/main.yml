@@ -1,4 +1,9 @@
 ---
+- name: 'Ensure dependencies'
+  ansible.builtin.package:
+    name: 'podman'
+    state: 'present'
+
 - name: 'Ensure SELinux policies'
   community.general.sefcontext:
     path: "{{ forgejo_runner_dir }}(/.*)?"
