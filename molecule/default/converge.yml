@@ -2,6 +2,11 @@
 - name: 'Converge'
   hosts: 'all'
   tasks:
+    - name: 'Override forgejo_runner_ca_file on EL-like'
+      ansible.builtin.set_fact:
+        forgejo_runner_ca_file: '/etc/ssl/certs/ca-bundle.crt'
+      when: ansible_facts['os_family'] == 'RedHat'
+
     - name: 'Run role'
       ansible.builtin.import_role:
         name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
